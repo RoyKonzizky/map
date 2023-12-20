@@ -1,6 +1,10 @@
 import {MapContainer} from 'react-leaflet/MapContainer'
 import {TileLayer} from 'react-leaflet/TileLayer'
 import {Marker, Popup} from 'react-leaflet'
+import "leaflet/dist/leaflet.css";
+import "@geoman-io/leaflet-geoman-free";
+import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
+import Geoman from "./Geoman.ts";
 
 function App() {
 
@@ -16,6 +20,7 @@ function App() {
                     A pretty CSS3 popup. <br /> Easily customizable.
                 </Popup>
             </Marker>
+            <Geoman/>
         </MapContainer>
     </div>
   )
