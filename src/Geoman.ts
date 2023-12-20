@@ -2,51 +2,50 @@ import { useEffect } from "react";
 import { useLeafletContext } from "@react-leaflet/core";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
+import L, {LatLng, LeafletEvent} from 'leaflet';
 
 const Geoman = () => {
     const context = useLeafletContext();
 
     useEffect(() => {
-        const leafletContainer = context.layerContainer || context.map;
+        const leafletContainer = context.map;
 
-        leafletContainer.pm.addControls({
+        (leafletContainer as typeof context.map).pm.addControls({
             drawMarker: false
         });
 
-        leafletContainer.pm.setGlobalOptions({ pmIgnore: false });
+        (leafletContainer as typeof context.map).pm.setGlobalOptions({ pmIgnore: false });
 
-        leafletContainer.on("pm:create", (e) => {
+        (leafletContainer as typeof context.map).on("pm:create", (e:LeafletEvent) => {
             if (e.layer && e.layer.pm) {
                 const shape = e;
-                console.log(e);
 
-                // enable editing of circle
-                shape.layer.pm.enable();
+                if (shape.layer instanceof L.Polyline) {
+                    const coordinates = shape.layer.getLatLngs(); // Get line coordinates
+                    const distance = calculateDistance(coordinates as LatLng[]); // Calculate distance
+                    const popupContent = `Distance between points: ${distance.toFixed(2)} meters`;
 
-                console.log(`object created: ${shape.layer.pm.getShape()}`);
-                // console.log(leafletContainer.pm.getGeomanLayers(true).toGeoJSON());
-                leafletContainer.pm
-                    .getGeomanLayers(true)
-                    .bindPopup("i am whole")
-                    .openPopup();
-                leafletContainer.pm
-                    .getGeomanLayers()
-                    .map((layer, index) => layer.bindPopup(`I am figure N° ${index}`));
-                shape.layer.on("pm:edit", (e) => {
-                    const event = e;
-                    // console.log(leafletContainer.pm.getGeomanLayers(true).toGeoJSON());
-                });
+                    shape.layer.bindPopup(popupContent).openPopup();
+                }
             }
         });
 
-        leafletContainer.on("pm:remove", (e) => {
-            console.log("object removed");
-            // console.log(leafletContainer.pm.getGeomanLayers(true).toGeoJSON());
-        });
+        const calculateDistance = (coordinates:LatLng[]) => {
+            let totalDistance = 0;
+
+            for (let i = 0; i < coordinates.length - 1; i++) {
+                const point1 = coordinates[i];
+                const point2 = coordinates[i + 1];
+                const distance = point1.distanceTo(point2);
+                totalDistance += distance;
+            }
+
+            return totalDistance;
+        };
 
         return () => {
-            leafletContainer.pm.removeControls();
-            leafletContainer.pm.setGlobalOptions({ pmIgnore: true });
+            (leafletContainer as typeof context.map).pm.removeControls();
+            (leafletContainer as typeof context.map).pm.setGlobalOptions({ pmIgnore: true });
         };
     }, [context]);
 
