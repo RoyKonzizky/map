@@ -11,7 +11,11 @@ const Geoman = () => {
         const leafletContainer = context.map;
 
         (leafletContainer as typeof context.map).pm.addControls({
-            drawMarker: false
+            drawMarker: false,
+            rotateMode: false,
+            dragMode: false,
+            editMode: false,
+            drawText: false,
         });
 
         leafletContainer.on("pm:create", (e: LeafletEvent) => {
