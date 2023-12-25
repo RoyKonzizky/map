@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useLeafletContext } from "@react-leaflet/core";
 import "@geoman-io/leaflet-geoman-free";
 import "@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css";
-import L, {LatLng, LeafletEvent} from 'leaflet';
+import L, {LatLng, LeafletEvent, Polyline} from 'leaflet';
 
 const Geoman = () => {
     const context = useLeafletContext();
@@ -14,9 +14,7 @@ const Geoman = () => {
             drawMarker: false
         });
 
-        (leafletContainer as typeof context.map).pm.setGlobalOptions({ pmIgnore: false });
-
-        (leafletContainer as typeof context.map).on("pm:create", (e:LeafletEvent) => {
+        leafletContainer.on("pm:create", (e: LeafletEvent) => {
             if (e.layer && e.layer.pm) {
                 const shape = e;
 
@@ -30,6 +28,22 @@ const Geoman = () => {
             }
         });
 
+
+        //Added for regular line feature
+        leafletContainer.pm.setGlobalOptions({
+            hideMiddleMarkers: true // New global option added
+        });
+        //Added for regular line feature
+        leafletContainer.on('pm:drawstart', (event) => {
+            const { workingLayer } = event;
+
+            workingLayer.on('pm:vertexadded', () => {
+                if ((workingLayer as Polyline).getLatLngs().length >= 2) {
+                    leafletContainer.pm.Draw.Line._finishShape();
+                }
+            });
+        });
+
         const calculateDistance = (coordinates:LatLng[]) => {
             let totalDistance = 0;
 
@@ -41,11 +55,6 @@ const Geoman = () => {
             }
 
             return totalDistance;
-        };
-
-        return () => {
-            (leafletContainer as typeof context.map).pm.removeControls();
-            (leafletContainer as typeof context.map).pm.setGlobalOptions({ pmIgnore: true });
         };
     }, [context]);
 
